@@ -60,7 +60,7 @@ void Wavefile::read(SamplerChunk& samplerChunk, float* waveData)
                 
                 for(int i=0; i< samplerChunk.numSampleLoops; i++)
                 {
-                    fread(samplerChunk.loopPoints[i],sizeof(SampleLoop),1,wave);
+                    fread(&samplerChunk.loopPoints[i],sizeof(SampleLoop),1,wave);
                 }
                 
                 }

@@ -47,6 +47,15 @@ typedef struct
     CuePoint*   cuePoints;
 } CueChunk;
 
+typedef struct {
+    long        identifier;
+    long        type;
+    long        start;
+    long        end;
+    long        fraction;
+    long        playCount;
+} SampleLoop;
+
 typedef struct
 {
     long         chunksize;
@@ -59,17 +68,9 @@ typedef struct
     long         SMPTEOffset;
     long         numSampleLoops;
     long         samplerData; 
-    SampleLoop* loopPoints;
+    SampleLoop*  loopPoints;
 }SamplerChunk;
 
-typedef struct {
-    long        identifier;
-    long        type;
-    long        start;
-    long        end;
-    long        fraction;
-    long        playCount;
-} SampleLoop;
 
 class Wavefile
 {
