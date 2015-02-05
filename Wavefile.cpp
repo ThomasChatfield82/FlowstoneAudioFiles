@@ -26,12 +26,68 @@ void Wavefile::openWaveFile(char* path)
           
     }
 }
+void Wavefile::read(SamplerChunk& samplerChunk, float* waveData)
+{
+    if(wave)
+    {
+              //look for data chunk 
+              char name[4] = {'d','a','t','a'};	
+              char smpl[4] = {'s','m','p','l'};
+              char dataID[4];
+              char chunkID[4];
+              samplerChunk.numSampleLoops=0; // initialise to zero for checking
+              
+              while(true)
+	    {
+		//This will loop looking for data chunk until we reach the end of the file....
+		fread(dataID,sizeof(BYTE),4,wave);
+	        if (!strncmp(dataID,name,4))
+	        { //found data chunk
+		    int noOfBytes = 0;
+	            fread(&noOfBytes,sizeof(DWORD),1,wave); //get number of bytes
+                    noOfSamples = header.noOfSamples = (noOfBytes / (bitsPerSample/8))/noOfChannels; //Store for use in readWaveData method
+                    
+		    readWaveData(waveData);
+	        }
+                
+                else if(!strncmp(chunkID,smpl,4))
+            { //Found Sampler chunk
+                fread(&samplerChunk.chunksize,sizeof(DWORD),1,wave); //Get size of chunk in bytes
+                fseek(wave,sizeof(long)*8, SEEK_CUR); //Skip straight to number of loop points
+                fread(&samplerChunk.numSampleLoops,sizeof(DWORD),1,wave);
+                
+                samplerChunk.loopPoints = new SampleLoop[samplerChunk.numSampleLoops];
+                
+                for(int i=0; i< samplerChunk.numSampleLoops; i++)
+                {
+                    fread(samplerChunk.loopPoints[i],sizeof(SampleLoop),1,wave);
+                }
+                
+                }
+		else
+                   {
+		        //Not cue chunk, so just get the size of this chunk and skip to the end...
+			int size=0;
+			fread(&size, sizeof(DWORD), 1, wave); //read in 32bit chunksize value
+			fseek(wave,(long)size,SEEK_CUR); //Skip this chunk!
+		   }
+
+		   seekIndex = ftell(wave); //Get current seekIndex 
+
+		   if(seekIndex>=fileSize) //Reached end of file
+		   {
+                       
+			break;
+		   }
+	    }    
+    }
+}
 
 void Wavefile::readHeader(Header& header)
 {
     if(wave)
     {
-       
+        this->header= header;
        fread(header.chunkID, sizeof(BYTE), 4, wave); //read in first four bytes
        
        if (!strncmp(header.chunkID, "RIFF",4))
@@ -56,7 +112,7 @@ void Wavefile::readHeader(Header& header)
               
               fread(&header.formatChunk.bitsPerSample, sizeof(short), 1, wave);
               bitsPerSample = header.formatChunk.bitsPerSample;
-		
+		/**
               //look for data chunk 
               char name[4] = {'d','a','t','a'};	
               char smpl[4] = {'s','m','p','l'};
@@ -96,7 +152,7 @@ void Wavefile::readHeader(Header& header)
 			break;
 		   }
 	    }
-	      
+	      */
 	   }
        }
     }

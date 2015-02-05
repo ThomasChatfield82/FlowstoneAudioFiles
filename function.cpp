@@ -60,9 +60,37 @@ extern "C" __declspec(dllexport) void loadWaveFile(int nParams, int* pIn, int* p
 	    //DATA
 	    NEWFLOATARRAY(pOut[5],head.noOfSamples*head.formatChunk.noOfChannels);
 	    float* waveData = GETFLOATARRAY(pOut[5]);
+            
+            SamplerChunk smpl;
+            wavefile.read(smpl, waveData);
+            
+            if(smpl.numSampleLoops>0) 
+            {
+                if(pOut[7])
+                {
+                    DELETEINTARRAY(pOut[6]);
+                    DELETEINTARRAY(pOut[7]);
+                }
+                
+                NEWINTARRAY(pOut[6], smpl.numSampleLoops);
+                NEWINTARRAY(pOut[7], smpl.numSampleLoops);
+                
+                int* start = GETINTARRAY(pOut[6]);
+                int* end = GETINTARRAY(pOut[7]);
+                
+                for(int i=0; i < smpl.numSampleLoops; i++)
+                {
+                    start[i] = (int)smpl.loopPoints[i].start;
+                    end[i] = (int)smpl.loopPoints[i].end;
+                }
+                
+                delete [] smpl.loopPoints;
+            }
+            
 	    //Read the audio data into a float array
-	    wavefile.readWaveData(waveData);
+	    //wavefile.readWaveData(waveData);
 
+            /**
 	    //CUE
             //I'm assuming that the CueChunk always comes after the dataChunk, but it is possible in rare cases
             //that the cueChunk comes first so need to deal with that possibility at some point....
@@ -81,6 +109,7 @@ extern "C" __declspec(dllexport) void loadWaveFile(int nParams, int* pIn, int* p
 		delete[] cueChunk.cuePoints; //TODO Refactor wavefile class so this is deleted in that class
 	    }
 
+             */
             wavefile.close();
             
             }catch(FileException& ex){

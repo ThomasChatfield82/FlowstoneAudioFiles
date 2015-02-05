@@ -49,18 +49,27 @@ typedef struct
 
 typedef struct
 {
-    char        chunkID[4];
-    int         chunksize;
-    int         manufacturer;
-    int         product;
-    int         samplePeriod;
-    int         midiNote;
-    int         midiPitchFrac;
-    int         SMPTEFormat;
-    int         SMPTEOffset;
-    int         numSampleLoops;
-    int         samplerData;    
+    long         chunksize;
+    long         manufacturer;
+    long         product;
+    long         samplePeriod;
+    long         midiNote;
+    long         midiPitchFrac;
+    long         SMPTEFormat;
+    long         SMPTEOffset;
+    long         numSampleLoops;
+    long         samplerData; 
+    SampleLoop* loopPoints;
 }SamplerChunk;
+
+typedef struct {
+    long        identifier;
+    long        type;
+    long        start;
+    long        end;
+    long        fraction;
+    long        playCount;
+} SampleLoop;
 
 class Wavefile
 {
@@ -80,6 +89,7 @@ private:
         
         inline int convertToFloatArray(BYTE* bytes, float* floatArray); 
         SamplerChunk sampler;
+        Header header;
         
 public:
 	Wavefile();
@@ -89,6 +99,7 @@ public:
 	void readHeader(Header& header);
 	void readWaveData(float* waveData);
 	void readCueChunk(CueChunk& cueChunk);
+        void read(SamplerChunk& samplerChunk, float* waveData);
 	void close(); //Must call this when done!
 };
 
