@@ -5,6 +5,7 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>FileException.h</itemPath>
+      <itemPath>FlowstoneMacros.h</itemPath>
       <itemPath>Wavefile.h</itemPath>
       <itemPath>Waveform.h</itemPath>
       <itemPath>stdafx.h</itemPath>
@@ -48,6 +49,8 @@
       </compileType>
       <item path="FileException.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="FlowstoneMacros.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="Wavefile.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Wavefile.h" ex="false" tool="3" flavor2="0">
@@ -90,6 +93,8 @@
         </linkerTool>
       </compileType>
       <item path="FileException.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="FlowstoneMacros.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Wavefile.cpp" ex="false" tool="1" flavor2="0">
       </item>

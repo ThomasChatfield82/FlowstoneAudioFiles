@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include "FileException.h"
 #include <limits.h>
+#include "FlowstoneMacros.h"
+
 
 Wavefile::Wavefile()
 {
@@ -26,7 +28,7 @@ void Wavefile::openWaveFile(char* path)
           
     }
 }
-void Wavefile::read(SamplerChunk& samplerChunk, float* waveData)
+int Wavefile::read(SamplerChunk& samplerChunk, int& waveData)
 {
     if(wave)
     {
@@ -45,9 +47,18 @@ void Wavefile::read(SamplerChunk& samplerChunk, float* waveData)
 	        { //found data chunk
 		    int noOfBytes = 0;
 	            fread(&noOfBytes,sizeof(DWORD),1,wave); //get number of bytes
-                    noOfSamples = header.noOfSamples = (noOfBytes / (bitsPerSample/8))/noOfChannels; //Store for use in readWaveData method
+                    int totalSamples = noOfBytes / (bitsPerSample/8);
+                    noOfSamples = totalSamples /noOfChannels; //Store for use in readWaveData method
                     
-		    readWaveData(waveData);
+                    if(waveData)//not null
+                    {
+                        DELETEFLOATARRAY(waveData);
+                    }
+                    
+                    NEWFLOATARRAY(waveData,totalSamples);
+                    
+                    float* audio = GETFLOATARRAY(waveData);
+		    readWaveData(audio);
 	        }
                 
                 else if(!strncmp(chunkID,smpl,4))
@@ -79,7 +90,9 @@ void Wavefile::read(SamplerChunk& samplerChunk, float* waveData)
                        
 			break;
 		   }
-	    }    
+	    }  
+              
+         return noOfSamples;
     }
 }
 
@@ -179,53 +192,6 @@ void Wavefile::readWaveData(float* waveData)
 	}
     }
 			
-}
-
-
-void Wavefile::readCueChunk(CueChunk& cueChunk)
-{
-    if(wave)
-    {
-	if(isWavefile)
-	{
-	    char name[4] = {'c','u','e',' '};
-	    
-	    while(true)
-	    {
-		//This will loop looking for cue chunk until we reach the end of the file....
-		fread(cueChunk.chunkID,sizeof(BYTE),4,wave);
-	        if (!strncmp(cueChunk.chunkID,name,4))
-	        { //found Cue chunk
-		    fread(&cueChunk.chunkSize, sizeof(DWORD), 1, wave); //read in 32bit chunksize value
-		    fread(&cueChunk.noOfCuePoints, sizeof(DWORD), 1, wave); //Read number of cuepoints
-
-		    cueChunk.cuePoints = new CuePoint[sizeof(CuePoint) * cueChunk.noOfCuePoints]; //cuePoint Array
-
-		    for(int cueIndex=0; cueIndex<cueChunk.noOfCuePoints; cueIndex++)
-		    {
-			fread(&cueChunk.cuePoints[cueIndex],sizeof(CuePoint),1,wave);
-		    }
-
-		    break;
-	        }
-		else
-                   {
-		        //Not cue chunk, so just get the size of this chunk and skip to the end...
-			int size=0;
-			fread(&size, sizeof(DWORD), 1, wave); //read in 32bit chunksize value
-			fseek(wave,(long)size,SEEK_CUR); //Skip this chunk!
-		   }
-
-		   seekIndex = ftell(wave); //Get current seekIndex 
-
-		   if(seekIndex>=fileSize) //Reached end of file
-		   {
-			cueChunk.noOfCuePoints=0;
-			break;
-		   }
-	    }
-	}
-    }
 }
 
 int Wavefile::convertToFloatArray(BYTE* bytes, float* floatArray)

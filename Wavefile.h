@@ -89,6 +89,8 @@ private:
         inline float bytesToFloat(BYTE firstByte, BYTE secondByte, BYTE thirdByte, BYTE fourthByte); //32bit
         
         inline int convertToFloatArray(BYTE* bytes, float* floatArray); 
+        
+        void readWaveData(float* waveData);
         SamplerChunk sampler;
         Header header;
         
@@ -97,10 +99,9 @@ public:
 	~Wavefile();
 
 	void openWaveFile(char* path);
-	void readHeader(Header& header);
-	void readWaveData(float* waveData);
-	void readCueChunk(CueChunk& cueChunk);
-        void read(SamplerChunk& samplerChunk, float* waveData);
+	void readHeader(Header& header);	
+        int read(SamplerChunk& samplerChunk, int& waveData); //returns samples per channel
+        
 	void close(); //Must call this when done!
 };
 
