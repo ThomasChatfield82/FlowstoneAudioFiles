@@ -8,7 +8,6 @@
 #include <limits.h>
 #include "FlowstoneMacros.h"
 
-
 Wavefile::Wavefile()
 {
 }
@@ -28,6 +27,7 @@ void Wavefile::openWaveFile(char* path)
           
     }
 }
+
 int Wavefile::read(SamplerChunk& samplerChunk, int& waveData)
 {
     if(wave)
@@ -62,23 +62,23 @@ int Wavefile::read(SamplerChunk& samplerChunk, int& waveData)
 	        }
                 
                 else if(!strncmp(chunkID,smpl,4))
-            { //Found Sampler chunk
-                fread(&samplerChunk.chunksize,sizeof(DWORD),1,wave); //Get size of chunk in bytes
-                fseek(wave,sizeof(long)*8, SEEK_CUR); //Skip straight to number of loop points
-                fread(&samplerChunk.numSampleLoops,sizeof(DWORD),1,wave);
+                { //Found Sampler chunk
+                   fread(&samplerChunk.chunksize,sizeof(DWORD),1,wave); //Get size of chunk in bytes
+                   fseek(wave,sizeof(long)*8, SEEK_CUR); //Skip straight to number of loop points
+                   fread(&samplerChunk.numSampleLoops,sizeof(DWORD),1,wave);
                 
-                samplerChunk.loopPoints = new SampleLoop[samplerChunk.numSampleLoops];
+                   samplerChunk.loopPoints = new SampleLoop[samplerChunk.numSampleLoops];
                 
-                for(int i=0; i< samplerChunk.numSampleLoops; i++)
-                {
-                    fread(&samplerChunk.loopPoints[i],sizeof(SampleLoop),1,wave);
-                }
+                   for(int i=0; i< samplerChunk.numSampleLoops; i++)
+                   {
+                       fread(&samplerChunk.loopPoints[i],sizeof(SampleLoop),1,wave);
+                   }
                 
                 }
 		else
                    {
-		        //Not cue chunk, so just get the size of this chunk and skip to the end...
-			int size=0;
+		       //Not cue chunk, so just get the size of this chunk and skip to the end...
+		        int size=0;
 			fread(&size, sizeof(DWORD), 1, wave); //read in 32bit chunksize value
 			fseek(wave,(long)size,SEEK_CUR); //Skip this chunk!
 		   }
@@ -87,8 +87,7 @@ int Wavefile::read(SamplerChunk& samplerChunk, int& waveData)
 
 		   if(seekIndex>=fileSize) //Reached end of file
 		   {
-                       
-			break;
+			break; 
 		   }
 	    }  
               
@@ -100,7 +99,6 @@ void Wavefile::readHeader(Header& header)
 {
     if(wave)
     {
-        this->header= header;
        fread(header.chunkID, sizeof(BYTE), 4, wave); //read in first four bytes
        
        if (!strncmp(header.chunkID, "RIFF",4))
@@ -111,7 +109,6 @@ void Wavefile::readHeader(Header& header)
            
            if (!strncmp(header.formatType,"WAVE",4)) 
            { 
-	        isWavefile=true;
               fread(header.formatChunk.chunkID, sizeof(BYTE), 4, wave); //read in 4 bytes "fmt ";
               fread(&header.formatChunk.chunkSize, sizeof(DWORD),1,wave);
               fread(&header.formatChunk.waveFormat, sizeof(short), 1, wave); //PCM / float - Only supporting PCM for now
@@ -124,8 +121,7 @@ void Wavefile::readHeader(Header& header)
               fread(&header.formatChunk.blockAlign, sizeof(short), 1, wave);
               
               fread(&header.formatChunk.bitsPerSample, sizeof(short), 1, wave);
-              bitsPerSample = header.formatChunk.bitsPerSample;
-		
+              bitsPerSample = header.formatChunk.bitsPerSample;	
 	   }
        }
     }
@@ -136,20 +132,14 @@ void Wavefile::readWaveData(float* waveData)
 {
     if(wave)
     {
-	if(isWavefile)
-	{
 	    int size = ((noOfSamples*noOfChannels)*(bitsPerSample/8)); //Get size of byte array
 	    BYTE* bytes = new BYTE[size];
 		
 	    fread(bytes,sizeof(BYTE),size,wave); 
 	
             convertToFloatArray(bytes, waveData);
-            
-            
-	    this->waveData = waveData;
 
 	    delete[] bytes;		
-	}
     }
 			
 }
@@ -212,8 +202,6 @@ int Wavefile::convertToFloatArray(BYTE* bytes, float* floatArray)
     }
 }
 
-
-
 //16bit bytes to float
 float Wavefile::bytesToFloat(BYTE firstByte, BYTE secondByte) 
 {
@@ -240,7 +228,7 @@ float Wavefile::bytesToFloat(BYTE firstByte, BYTE secondByte, BYTE thirdByte, BY
     
     return s / (float)INT_MAX; //Divide by max int value to get a -1 to 1 float value
     
-    }else if(waveFormat==3)//Float
+    }else if(waveFormat==3)//Float ... Not working!
     { 
         float f = (fourthByte << 24) | (thirdByte << 16) | (secondByte << 8) | firstByte;
         return f;

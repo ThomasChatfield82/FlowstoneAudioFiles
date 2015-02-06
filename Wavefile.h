@@ -1,6 +1,5 @@
 //Wavefile class used for reading and writing wavefiles designed for easy use with Flowstones DLL component
 //Currently only supports PCM wave data.
-//This is a prototype error checking is minimal to non existent!!!! 
 //Author Thomas Chatfield AKA Exo
 
 #ifndef WAVEFILE
@@ -53,7 +52,6 @@ typedef struct
     SampleLoop*  loopPoints;
 }SamplerChunk;
 
-
 class Wavefile
 {
 private:
@@ -65,7 +63,6 @@ private:
 	int seekIndex;
 	int fileSize;
         short waveFormat;
-	float* waveData;
 	inline float bytesToFloat(BYTE firstByte, BYTE secondByte); //16bit
         inline float bytesToFloat(BYTE firstByte, BYTE secondByte, BYTE thirdByte); //24bit
         inline float bytesToFloat(BYTE firstByte, BYTE secondByte, BYTE thirdByte, BYTE fourthByte); //32bit
@@ -73,9 +70,7 @@ private:
         inline int convertToFloatArray(BYTE* bytes, float* floatArray); 
         
         void readWaveData(float* waveData);
-        SamplerChunk sampler;
-        Header header;
-        
+                
 public:
 	Wavefile();
 	~Wavefile();
@@ -86,6 +81,5 @@ public:
         
 	void close(); //Must call this when done!
 };
-
 
 #endif
