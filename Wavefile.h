@@ -29,24 +29,6 @@ typedef struct
     int         noOfSamples;
 }Header;
 
-typedef struct 
-{
-    char        cuePointID[4];			
-    int         playOrderPosition;	
-    char        dataChunkID[4];		
-    int         chunkStart;			
-    int         blockStart;			
-    int         sampleOffset;
-}CuePoint;
-
-typedef struct 
-{
-    char        chunkID[4];		
-    int         chunkSize;	
-    int         noOfCuePoints;	
-    CuePoint*   cuePoints;
-} CueChunk;
-
 typedef struct {
     long        identifier;
     long        type;

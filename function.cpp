@@ -71,8 +71,9 @@ extern "C" __declspec(dllexport) void minMax(int nParams, int* pIn, int* pOut)
 {
             float* wave = GETFLOATARRAY(pIn[0]);
             int size = pIn[1];
-	 //MIN/MAX ARRAYS FOR DISPLAY 
+	    //MIN/MAX ARRAYS FOR DISPLAY 
 	    int displaySize=300; //This is hard coded as a reasonable amount of sample points to display a waveform. 
+           
 	    //Create output arrays once
             if(pOut[1]==NULL)
             {
