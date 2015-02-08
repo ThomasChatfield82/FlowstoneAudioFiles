@@ -63,6 +63,7 @@ private:
 	int seekIndex;
 	int fileSize;
         short waveFormat;
+        bool sampler=false;
 	inline float bytesToFloat(BYTE firstByte, BYTE secondByte); //16bit
         inline float bytesToFloat(BYTE firstByte, BYTE secondByte, BYTE thirdByte); //24bit
         inline float bytesToFloat(BYTE firstByte, BYTE secondByte, BYTE thirdByte, BYTE fourthByte); //32bit
@@ -78,7 +79,7 @@ public:
 	void openWaveFile(char* path);
 	void readHeader(Header& header);	
         int read(SamplerChunk& samplerChunk, int& waveData); //returns samples per channel
-        
+        bool hasSamplerChunk();
 	void close(); //Must call this when done!
 };
 

@@ -34,8 +34,10 @@ extern "C" __declspec(dllexport) void loadWaveFile(int nParams, int* pIn, int* p
             noOfSamplesPerChannel = wavefile.read(samplerChunk, pOut[5]);
             
             GETINT(pOut[4]) = noOfSamplesPerChannel; 
+            GETBOOL(pOut[8]) = wavefile.hasSamplerChunk();
+            GETINT(pOut[9]) = samplerChunk.numSampleLoops;
             
-            if(samplerChunk.numSampleLoops>0) 
+            if(wavefile.hasSamplerChunk()) 
             {
                 if(pOut[7])
                 {
@@ -66,7 +68,6 @@ extern "C" __declspec(dllexport) void loadWaveFile(int nParams, int* pIn, int* p
 	}
 }
 
-//TODO 
 extern "C" __declspec(dllexport) void minMax(int nParams, int* pIn, int* pOut)
 {
             float* wave = GETFLOATARRAY(pIn[0]);
@@ -100,4 +101,9 @@ extern "C" __declspec(dllexport) void minMax(int nParams, int* pIn, int* pOut)
             
             waveform.minMaxForDisplay(minStatic,maxStatic,displaySize);
             
+}
+
+extern "C" __declspec(dllexport) void writeWavefile(int nParams, int* pIn, int* pOut)
+{
+    
 }

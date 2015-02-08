@@ -33,17 +33,16 @@ int Wavefile::read(SamplerChunk& samplerChunk, int& waveData)
     if(wave)
     {
               //look for data chunk 
-              char name[4] = {'d','a','t','a'};	
+              char data[4] = {'d','a','t','a'};	
               char smpl[4] = {'s','m','p','l'};
-              char dataID[4];
               char chunkID[4];
               samplerChunk.numSampleLoops=0; // initialise to zero for checking
               
               while(true)
 	    {
 		//This will loop looking for data chunk until we reach the end of the file....
-		fread(dataID,sizeof(BYTE),4,wave);
-	        if (!strncmp(dataID,name,4))
+		fread(chunkID,sizeof(BYTE),4,wave);
+	        if (!strncmp(chunkID,data,4))
 	        { //found data chunk
 		    int noOfBytes = 0;
 	            fread(&noOfBytes,sizeof(DWORD),1,wave); //get number of bytes
@@ -63,8 +62,9 @@ int Wavefile::read(SamplerChunk& samplerChunk, int& waveData)
                 
                 else if(!strncmp(chunkID,smpl,4))
                 { //Found Sampler chunk
+                   sampler=true;
                    fread(&samplerChunk.chunksize,sizeof(DWORD),1,wave); //Get size of chunk in bytes
-                   fseek(wave,sizeof(long)*8, SEEK_CUR); //Skip straight to number of loop points
+                   fseek(wave,sizeof(long)*7, SEEK_CUR); //Skip straight to number of loop points
                    fread(&samplerChunk.numSampleLoops,sizeof(DWORD),1,wave);
                 
                    samplerChunk.loopPoints = new SampleLoop[samplerChunk.numSampleLoops];
@@ -93,6 +93,11 @@ int Wavefile::read(SamplerChunk& samplerChunk, int& waveData)
               
          return noOfSamples;
     }
+}
+
+bool Wavefile::hasSamplerChunk()
+{
+    return sampler;
 }
 
 void Wavefile::readHeader(Header& header)
