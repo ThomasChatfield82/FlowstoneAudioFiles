@@ -19,20 +19,17 @@ extern "C" __declspec(dllexport) void loadWaveFile(int nParams, int* pIn, int* p
 	    Wavefile wavefile;
 	    wavefile.openWaveFile(path);
             
-	    //HEADER
+	   //HEADER
 	    Header head;
-	    wavefile.readHeader(head);
-            
-	    //Output the Header info of interest
-	    GETINT(pOut[1]) = head.formatChunk.waveFormat;
-	    GETINT(pOut[2]) = head.formatChunk.noOfChannels;
-	    GETINT(pOut[3]) = head.formatChunk.sampleRate;
-	   
             SamplerChunk samplerChunk;
             
             int noOfSamplesPerChannel=0;
-            noOfSamplesPerChannel = wavefile.read(samplerChunk, pOut[5]);
+            noOfSamplesPerChannel = wavefile.read(head, samplerChunk, pOut[5]);
             
+            //Output the Header info of interest
+	    GETINT(pOut[1]) = head.formatChunk.waveFormat;
+	    GETINT(pOut[2]) = head.formatChunk.noOfChannels;
+	    GETINT(pOut[3]) = head.formatChunk.sampleRate;
             GETINT(pOut[4]) = noOfSamplesPerChannel; 
             GETBOOL(pOut[8]) = wavefile.hasSamplerChunk();
             GETINT(pOut[9]) = samplerChunk.numSampleLoops;

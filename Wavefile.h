@@ -64,6 +64,8 @@ private:
 	int fileSize;
         short waveFormat;
         bool sampler=false;
+        int loopPoints;
+        bool foundFormatChunk;
 	inline float bytesToFloat(BYTE firstByte, BYTE secondByte); //16bit
         inline float bytesToFloat(BYTE firstByte, BYTE secondByte, BYTE thirdByte); //24bit
         inline float bytesToFloat(BYTE firstByte, BYTE secondByte, BYTE thirdByte, BYTE fourthByte); //32bit
@@ -78,7 +80,7 @@ public:
 
 	void openWaveFile(char* path);
 	void readHeader(Header& header);	
-        int read(SamplerChunk& samplerChunk, int& waveData); //returns samples per channel
+        int read(Header& header, SamplerChunk& samplerChunk, int& waveData); //returns samples per channel
         bool hasSamplerChunk();
 	void close(); //Must call this when done!
 };

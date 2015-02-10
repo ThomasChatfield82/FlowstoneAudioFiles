@@ -28,59 +28,115 @@ void Wavefile::openWaveFile(char* path)
     }
 }
 
-int Wavefile::read(SamplerChunk& samplerChunk, int& waveData)
+int Wavefile::read(Header& header, SamplerChunk& samplerChunk, int& waveData)
 {
     if(wave)
     {
-              //look for data chunk 
-              char data[4] = {'d','a','t','a'};	
-              char smpl[4] = {'s','m','p','l'};
+        fread(header.chunkID, sizeof(BYTE), 4, wave); //read in first four bytes
+       
+       if (!strncmp(header.chunkID, "RIFF",4)) 
+       {  
+           fread(&header.chunkSize, sizeof(DWORD), 1, wave); //read in 32bit chunksize value
+	     fileSize = header.chunkSize-4;
+           fread(header.formatType, sizeof(BYTE), 4, wave); //read in 4 byte string FormatType
+           
+           if (!strncmp(header.formatType,"WAVE",4)) 
+           { 
               char chunkID[4];
-              samplerChunk.numSampleLoops=0; // initialise to zero for checking
-              
+              //Chunks of interest
+              char data[4] = {'d','a','t','a'};	
+              char fmt[4] = {'f','m','t',' '};
+              char smpl[4] = {'s','m','p','l'};
+ 
               while(true)
 	    {
-		//This will loop looking for data chunk until we reach the end of the file....
 		fread(chunkID,sizeof(BYTE),4,wave);
-	        if (!strncmp(chunkID,data,4))
-	        { //found data chunk
-		    int noOfBytes = 0;
-	            fread(&noOfBytes,sizeof(DWORD),1,wave); //get number of bytes
-                    int totalSamples = noOfBytes / (bitsPerSample/8);
-                    noOfSamples = totalSamples /noOfChannels; //Store for use in readWaveData method
+                
+                //Look for format chunk first, must be before data chunk
+                if(!strncmp(chunkID,fmt,4))
+                {
+                    foundFormatChunk=true;
+                    fread(&header.formatChunk.chunkSize, sizeof(DWORD),1,wave);
+                    fread(&header.formatChunk.waveFormat, sizeof(short), 1, wave); //PCM / float - Only supporting PCM for now
+                    waveFormat = header.formatChunk.waveFormat;
+                    fread(&header.formatChunk.noOfChannels, sizeof(short),1,wave);
+                    noOfChannels = header.formatChunk.noOfChannels;
+	        
+                    fread(&header.formatChunk.sampleRate, sizeof(DWORD), 1, wave);
+                    fread(&header.formatChunk.byteRate, sizeof(DWORD), 1, wave);
+                    fread(&header.formatChunk.blockAlign, sizeof(short), 1, wave);
+              
+                    fread(&header.formatChunk.bitsPerSample, sizeof(short), 1, wave);
+                    bitsPerSample = header.formatChunk.bitsPerSample;
                     
-                    if(waveData)//not null
+                    if(header.formatChunk.chunkSize%2){
+                        fseek(wave,1,SEEK_CUR);
+                      }
+                }
+	        else if (!strncmp(chunkID,data,4))
+	        { //found data chunk
+                    if(foundFormatChunk)
                     {
-                        DELETEFLOATARRAY(waveData);
+		      int noOfBytes = 0;
+	              fread(&noOfBytes,sizeof(DWORD),1,wave); //get number of bytes
+                      int totalSamples = noOfBytes / (bitsPerSample/8);
+                      noOfSamples = totalSamples /noOfChannels; //Store for use in readWaveData method
+                    
+                      if(waveData)//not null
+                      {
+                         DELETEFLOATARRAY(waveData);
+                      }
+                    
+                      NEWFLOATARRAY(waveData,totalSamples);
+                    
+                      float* audio = GETFLOATARRAY(waveData);
+		      readWaveData(audio);
+                    
+                      //check for padding byte and skip if found
+                      if(noOfBytes%2){
+                        fseek(wave,1,SEEK_CUR);
+                      }
+                    }else{
+                        throw FileException("Format chunk not found");
                     }
                     
-                    NEWFLOATARRAY(waveData,totalSamples);
-                    
-                    float* audio = GETFLOATARRAY(waveData);
-		    readWaveData(audio);
 	        }
                 
                 else if(!strncmp(chunkID,smpl,4))
                 { //Found Sampler chunk
                    sampler=true;
-                   fread(&samplerChunk.chunksize,sizeof(DWORD),1,wave); //Get size of chunk in bytes
+                   fread(&samplerChunk.chunksize,sizeof(long),1,wave); //Get size of chunk in bytes
                    fseek(wave,sizeof(long)*7, SEEK_CUR); //Skip straight to number of loop points
-                   fread(&samplerChunk.numSampleLoops,sizeof(DWORD),1,wave);
+                   fread(&samplerChunk.numSampleLoops,sizeof(long),1,wave);
+                   fread(&samplerChunk.samplerData,sizeof(long),1,wave);
+                   loopPoints = samplerChunk.numSampleLoops;
+                  
+                      samplerChunk.loopPoints = new SampleLoop[samplerChunk.numSampleLoops];
                 
-                   samplerChunk.loopPoints = new SampleLoop[samplerChunk.numSampleLoops];
-                
-                   for(int i=0; i< samplerChunk.numSampleLoops; i++)
+                      for(int i=0; i< samplerChunk.numSampleLoops; i++)
+                      {
+                         fread(&samplerChunk.loopPoints[i],sizeof(SampleLoop),1,wave);
+                      }
+                   
+                   if(samplerChunk.samplerData>0)
                    {
-                       fread(&samplerChunk.loopPoints[i],sizeof(SampleLoop),1,wave);
+                       fseek(wave,samplerChunk.samplerData,SEEK_CUR);
+                   }
+                   
+                   if(samplerChunk.chunksize%2){
+                        fseek(wave,1,SEEK_CUR);
                    }
                 
                 }
 		else
                    {
-		       //Not cue chunk, so just get the size of this chunk and skip to the end...
 		        int size=0;
 			fread(&size, sizeof(DWORD), 1, wave); //read in 32bit chunksize value
 			fseek(wave,(long)size,SEEK_CUR); //Skip this chunk!
+                        
+                        if(size%2){
+                           fseek(wave,1,SEEK_CUR);
+                        }
 		   }
 
 		   seekIndex = ftell(wave); //Get current seekIndex 
@@ -92,6 +148,8 @@ int Wavefile::read(SamplerChunk& samplerChunk, int& waveData)
 	    }  
               
          return noOfSamples;
+    }
+       }
     }
 }
 
